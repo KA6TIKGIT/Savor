@@ -16,9 +16,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,9 +38,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.savor.R
 import com.example.savor.data.local.SortOrder
@@ -56,6 +60,12 @@ fun ExploreScreen(
     val hasError by vm.hasError.collectAsState()
     val hasSearched by vm.hasSearched.collectAsState()
     var showSettings by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val performSearch = {
+        keyboardController?.hide()
+        vm.search()
+    }
 
     Column(modifier.padding(horizontal = dimensionResource(R.dimen.screen_padding))) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -66,27 +76,68 @@ fun ExploreScreen(
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.search_hint)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { vm.search() }),
+                keyboardActions = KeyboardActions(onSearch = { performSearch() }),
                 trailingIcon = {
-                    IconButton(onClick = { vm.search() }) {
-                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { vm.onQueryChange("") }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.clear_search)
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { performSearch() }) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = stringResource(R.string.search)
+                            )
+                        }
                     }
                 }
             )
             IconButton(onClick = { showSettings = true }) {
-                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.settings)
+                )
             }
         }
 
         when {
             loading -> CenteredBox { CircularProgressIndicator() }
-            hasError -> CenteredBox { Text(stringResource(R.string.error_network)) }
-            hasSearched && products.isEmpty() -> CenteredBox { Text(stringResource(R.string.no_results)) }
+            hasError -> CenteredBox {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        stringResource(R.string.error_network),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Button(onClick = { performSearch() }) {
+                        Text(stringResource(R.string.retry))
+                    }
+                }
+            }
+            hasSearched && products.isEmpty() -> CenteredBox {
+                Text(
+                    stringResource(R.string.no_results),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+            !hasSearched && products.isEmpty() -> CenteredBox {
+                Text(
+                    stringResource(R.string.search_prompt),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
             else -> LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(products) { product ->
+                items(products, key = { it.code ?: it.hashCode() }) { product ->
                     ProductRow(product) { onOpen(product) }
                 }
             }
@@ -125,10 +176,16 @@ fun SettingsDialog(vm: SavorViewModel, onDismiss: () -> Unit) {
                 Text(stringResource(R.string.sort_by), style = MaterialTheme.typography.titleSmall)
                 options.forEach { (order, label) ->
                     Row(
-                        Modifier.fillMaxWidth().clickable { vm.setSortOrder(order) },
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { vm.setSortOrder(order) }
+                            .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(selected = sort == order, onClick = { vm.setSortOrder(order) })
+                        RadioButton(
+                            selected = sort == order,
+                            onClick = { vm.setSortOrder(order) }
+                        )
                         Text(stringResource(label))
                     }
                 }

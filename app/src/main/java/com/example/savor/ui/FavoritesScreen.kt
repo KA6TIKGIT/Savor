@@ -37,7 +37,7 @@ fun FavoritesScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(favorites) { product ->
+            items(favorites, key = { it.code ?: it.hashCode() }) { product ->
                 ProductRow(product) { onOpen(product) }
             }
         }

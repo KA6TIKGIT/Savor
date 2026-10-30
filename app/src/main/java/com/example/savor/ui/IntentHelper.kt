@@ -3,19 +3,22 @@ package com.example.savor.ui
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
+import androidx.core.net.toUri
 import com.example.savor.R
 import com.example.savor.data.remote.Product
 
 object IntentHelper {
 
-    private fun productUrl(product: Product) =
-        "https://world.openfoodfacts.org/product/${product.code}"
+    private fun productUrl(product: Product): String? {
+        val code = product.code?.takeIf { it.isNotBlank() } ?: return null
+        return "https://world.openfoodfacts.org/product/$code"
+    }
 
     // Implicit intent 1: open the product page in any browser
     fun openInBrowser(context: Context, product: Product) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(productUrl(product)))
+        val url = productUrl(product) ?: return
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
         launch(context, intent)
     }
 
@@ -23,12 +26,13 @@ object IntentHelper {
     fun shareByEmail(context: Context, product: Product) {
         val name = product.productName.orEmpty()
         val brand = product.brands ?: context.getString(R.string.unknown_brand)
+        val url = productUrl(product) ?: ""
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:")   // only email apps respond to this
+            data = "mailto:".toUri()   // only email apps respond to this
             putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.email_subject, name))
             putExtra(
                 Intent.EXTRA_TEXT,
-                context.getString(R.string.email_body, name, brand, productUrl(product))
+                context.getString(R.string.email_body, name, brand, url)
             )
         }
         launch(context, intent)

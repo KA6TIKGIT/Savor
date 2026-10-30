@@ -94,7 +94,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(favorites.take(8)) { p ->
+                    items(favorites.take(8), key = { it.code ?: it.hashCode() }) { p ->
                         Column(
                             modifier = Modifier
                                 .width(110.dp)

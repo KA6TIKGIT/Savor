@@ -1,10 +1,12 @@
 package com.example.savor.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,12 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.savor.R
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun DetailScreen(
@@ -52,9 +56,30 @@ fun DetailScreen(
     val product by vm.selected.collectAsState()
     val isFavorite by vm.selectedIsFavorite.collectAsState()
     val reviews by vm.selectedReviews.collectAsState()
-    val p = product ?: return
-
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val p = product
+    if (p == null) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    stringResource(R.string.no_results),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Button(onClick = onBack) {
+                    Text(stringResource(R.string.back))
+                }
+            }
+        }
+        return
+    }
 
     var rating by remember { mutableIntStateOf(5) }
     var reviewText by remember { mutableStateOf("") }
@@ -71,12 +96,17 @@ fun DetailScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
                 }
                 IconButton(onClick = vm::toggleFavorite) {
                     Icon(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = stringResource(R.string.favorites),
+                        contentDescription = stringResource(
+                            if (isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
+                        ),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -143,7 +173,7 @@ fun DetailScreen(
                         IconButton(onClick = { rating = star }) {
                             Icon(
                                 Icons.Default.Star,
-                                contentDescription = null,
+                                contentDescription = pluralStringResource(R.plurals.star_rating_content_description, star, star),
                                 tint = if (star <= rating) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.outline
                             )
@@ -158,6 +188,7 @@ fun DetailScreen(
                 )
                 Button(
                     onClick = {
+                        keyboardController?.hide()
                         vm.addReview(rating, reviewText)
                         reviewText = ""
                     },
@@ -168,7 +199,7 @@ fun DetailScreen(
         if (reviews.isEmpty()) {
             item { Text(stringResource(R.string.no_reviews)) }
         }
-        items(reviews) { review ->
+        items(reviews, key = { it.id }) { review ->
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 modifier = Modifier.fillMaxWidth()
@@ -180,7 +211,10 @@ fun DetailScreen(
                         Text(review.text)
                     }
                     IconButton(onClick = { vm.deleteReview(review) }) {
-                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_review)
+                        )
                     }
                 }
             }

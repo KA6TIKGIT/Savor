@@ -9,8 +9,8 @@ import com.example.savor.data.local.SavorDatabase
 import com.example.savor.data.local.SettingsStore
 import com.example.savor.data.local.SortOrder
 import com.example.savor.data.remote.Product
-import com.example.savor.data.remote.RetrofitClient
 import com.example.savor.data.repository.SavorRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,10 +27,7 @@ import kotlinx.coroutines.launch
 class SavorViewModel(app: Application) : AndroidViewModel(app) {
 
     private val settings = SettingsStore(app)
-    private val repo = SavorRepository(
-        SavorDatabase.getInstance(app),
-        RetrofitClient.searchApi
-    )
+    private val repo = SavorRepository(SavorDatabase.getInstance(app))
 
     // ---- Search state ----
     val query = MutableStateFlow(settings.lastSearch)
@@ -39,6 +36,7 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
     val hasError = MutableStateFlow(false)
     val hasSearched = MutableStateFlow(false)
     private var searchJob: Job? = null
+    private var detailJob: Job? = null
 
     // ---- Settings state ----
     val sortOrder = MutableStateFlow(settings.sortOrder)
@@ -78,11 +76,22 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- Actions ----
 
-    fun onQueryChange(text: String) { query.value = text }
+    fun onQueryChange(text: String) {
+        query.value = text
+        if (text.isBlank()) {
+            results.value = emptyList()
+            hasSearched.value = false
+            hasError.value = false
+        }
+    }
 
     fun search(text: String = query.value) {
         val q = text.trim()
-        if (q.isBlank()) return
+        if (q.isBlank()) {
+            results.value = emptyList()
+            hasSearched.value = false
+            return
+        }
         settings.lastSearch = q
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -91,6 +100,9 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 results.value = repo.search(q)
                 hasSearched.value = true
+            } catch (e: CancellationException) {
+                // A new search replaces this one; it is not a network failure.
+                throw e
             } catch (e: Exception) {
                 hasError.value = true
             } finally {
@@ -99,7 +111,27 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun select(product: Product) { selected.value = product }
+    fun select(product: Product) {
+        selected.value = product
+        val code = product.code ?: return
+        detailJob?.cancel()
+        detailJob = viewModelScope.launch {
+            val freshProduct = repo.getProduct(code) ?: return@launch
+            if (selected.value?.code == code) {
+                selected.value = selected.value?.let { current ->
+                    current.copy(
+                        productName = freshProduct.productName ?: current.productName,
+                        brands = freshProduct.brands ?: current.brands,
+                        imageUrl = freshProduct.imageUrl ?: current.imageUrl,
+                        imageSmallUrl = freshProduct.imageSmallUrl ?: current.imageSmallUrl,
+                        nutriscoreGrade = freshProduct.nutriscoreGrade ?: current.nutriscoreGrade,
+                        categories = freshProduct.categories ?: current.categories,
+                        ingredientsText = freshProduct.ingredientsText ?: current.ingredientsText
+                    )
+                } ?: freshProduct
+            }
+        }
+    }
 
     fun toggleFavorite() {
         val p = selected.value ?: return
@@ -129,9 +161,13 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
     // ---- Helpers ----
 
     // a is best, e is worst, unknown goes last
-    private fun gradeRank(grade: String?): Int =
+    fun gradeRank(grade: String?): Int =
         when (grade?.lowercase()) {
-            "a" -> 0; "b" -> 1; "c" -> 2; "d" -> 3; "e" -> 4
+            "a" -> 0
+            "b" -> 1
+            "c" -> 2
+            "d" -> 3
+            "e" -> 4
             else -> 5
         }
 
@@ -141,6 +177,8 @@ class SavorViewModel(app: Application) : AndroidViewModel(app) {
         brands = brands,
         imageUrl = imageUrl,
         imageSmallUrl = imageUrl,
-        nutriscoreGrade = nutriscoreGrade
+        nutriscoreGrade = nutriscoreGrade,
+        categories = categories,
+        ingredientsText = ingredientsText
     )
 }

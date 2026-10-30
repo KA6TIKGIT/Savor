@@ -23,7 +23,18 @@ data class Product(
     @SerializedName("nutriscore_grade") val nutriscoreGrade: String? = null,
     val categories: String? = null,
     @SerializedName("ingredients_text") val ingredientsText: String? = null
-)
+) {
+    fun sanitized(): Product = copy(
+        code = code.cleanText(),
+        productName = productName.cleanText(),
+        brands = brands.cleanText(),
+        imageUrl = imageUrl.cleanText(),
+        imageSmallUrl = (imageSmallUrl ?: imageUrl).cleanText(),
+        nutriscoreGrade = nutriscoreGrade.cleanText()?.lowercase(),
+        categories = categories.cleanText(),
+        ingredientsText = ingredientsText.cleanText()
+    )
+}
 
 // Search-a-licious response. Some fields can be a string OR a list,
 // so we read them as JsonElement and convert ourselves.
@@ -43,20 +54,41 @@ data class Hit(
     @SerializedName("ingredients_text") val ingredientsText: JsonElement? = null
 ) {
     fun toProduct() = Product(
-        code = code,
-        productName = productName.asText(),
-        brands = brands.asText(),
-        imageUrl = imageUrl,
-        imageSmallUrl = imageSmallUrl ?: imageUrl,
-        nutriscoreGrade = nutriscoreGrade,
-        categories = categories.asText(),
-        ingredientsText = ingredientsText.asText()
+        code = code.cleanText(),
+        productName = productName.asText().cleanText(),
+        brands = brands.asText().cleanText(),
+        imageUrl = imageUrl.cleanText(),
+        imageSmallUrl = (imageSmallUrl ?: imageUrl).cleanText(),
+        nutriscoreGrade = nutriscoreGrade.cleanText()?.lowercase(),
+        categories = categories.asText().cleanText(),
+        ingredientsText = ingredientsText.asText().cleanText()
     )
 }
 
-private fun JsonElement?.asText(): String? = when {
+fun JsonElement?.asText(): String? = when {
     this == null || isJsonNull -> null
-    isJsonArray -> asJsonArray.joinToString(", ") { it.asString }
+    isJsonArray -> {
+        val items = asJsonArray.mapNotNull { elem ->
+            when {
+                elem == null || elem.isJsonNull -> null
+                elem.isJsonPrimitive -> elem.asString
+                else -> null
+            }
+        }.filter { it.isNotBlank() }
+        if (items.isEmpty()) null else items.joinToString(", ")
+    }
     isJsonPrimitive -> asString
     else -> null
+}
+
+fun String?.cleanText(): String? {
+    if (this == null) return null
+    val trimmed = trim()
+    if (trimmed.isEmpty() ||
+        trimmed.equals("null", ignoreCase = true) ||
+        trimmed.equals("unknown", ignoreCase = true)
+    ) {
+        return null
+    }
+    return trimmed
 }

@@ -45,10 +45,14 @@ fun ProductImage(
 ) {
     if (url.isNullOrBlank()) {
         Box(
-            modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+            modifier.background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Info, contentDescription = null)
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
         }
     } else {
         GlideImage(

@@ -11,6 +11,8 @@ data class FavoriteEntity(
     val brands: String?,
     val imageUrl: String?,
     val nutriscoreGrade: String?,
+    val categories: String? = null,
+    val ingredientsText: String? = null,
     val addedAt: Long = System.currentTimeMillis()
 )
 

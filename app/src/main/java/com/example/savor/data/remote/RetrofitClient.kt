@@ -1,5 +1,6 @@
 package com.example.savor.data.remote
 
+import com.example.savor.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -19,7 +20,12 @@ object RetrofitClient {
     }
 
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BASIC
+        // Network traffic should never be logged by a release build.
+        level = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BASIC
+        } else {
+            HttpLoggingInterceptor.Level.NONE
+        }
     }
 
     private val client = OkHttpClient.Builder()

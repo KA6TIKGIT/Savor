@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -34,6 +34,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -53,23 +54,24 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
     // Retrofit + JSON + logging
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
 
-// Glide (with Compose support)
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+    // Glide (with Compose support)
+    implementation(libs.glide)
+    implementation(libs.glide.compose)
 
-// Room
-    implementation("androidx.room:room-runtime:2.8.0")
-    implementation("androidx.room:room-ktx:2.8.0")
-    ksp("androidx.room:room-compiler:2.8.0")
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
-// ViewModel + Navigation for Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    // ViewModel + Navigation for Compose
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
 
-    implementation("androidx.compose.material:material-icons-core")
+    implementation(libs.androidx.compose.material.icons.core)
 }
