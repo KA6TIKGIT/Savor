@@ -30,4 +30,9 @@
     <string name="search">Search</string>
     <string name="email_subject">Check out %1$s</string>
     <string name="email_body">I found %1$s (%2$s) on Open Food Facts:\n%3$s</string>
+    <string name="home">Home</string>
+    <string name="welcome_subtitle">Discover what\'s in your food.</string>
+    <string name="continue_search">Continue: %1$s</string>
+    <string name="popular_searches_title">Popular searches</string>
+    <string name="your_favorites_title">Your favorites</string>
 </resources>

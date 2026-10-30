@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.savor.R
+import androidx.compose.material.icons.filled.Home
 
 @Composable
 fun SavorApp(vm: SavorViewModel = viewModel()) {
@@ -57,10 +58,21 @@ fun SavorApp(vm: SavorViewModel = viewModel()) {
                 if (route != "detail") {
                     NavigationBar {
                         NavigationBarItem(
+                            selected = route == "home",
+                            onClick = {
+                                nav.navigate("home") {
+                                    popUpTo("home")
+                                    launchSingleTop = true
+                                }
+                            },
+                            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                            label = { Text(stringResource(R.string.home)) }
+                        )
+                        NavigationBarItem(
                             selected = route == "explore",
                             onClick = {
                                 nav.navigate("explore") {
-                                    popUpTo("explore")
+                                    popUpTo("home")
                                     launchSingleTop = true
                                 }
                             },
@@ -71,7 +83,7 @@ fun SavorApp(vm: SavorViewModel = viewModel()) {
                             selected = route == "favorites",
                             onClick = {
                                 nav.navigate("favorites") {
-                                    popUpTo("explore")
+                                    popUpTo("home")
                                     launchSingleTop = true
                                 }
                             },
@@ -84,9 +96,23 @@ fun SavorApp(vm: SavorViewModel = viewModel()) {
         ) { inner ->
             NavHost(
                 navController = nav,
-                startDestination = "explore",
+                startDestination = "home",
                 modifier = Modifier.padding(inner)
             ) {
+                composable("home") {
+                    HomeScreen(
+                        vm,
+                        onSearch = { term ->
+                            vm.onQueryChange(term)
+                            vm.search(term)
+                            nav.navigate("explore") {
+                                popUpTo("home")
+                                launchSingleTop = true
+                            }
+                        },
+                        onOpen = { vm.select(it); nav.navigate("detail") }
+                    )
+                }
                 composable("explore") {
                     ExploreScreen(vm, onOpen = { vm.select(it); nav.navigate("detail") })
                 }
