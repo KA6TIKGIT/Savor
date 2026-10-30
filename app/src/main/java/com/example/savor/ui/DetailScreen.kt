@@ -40,6 +40,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.savor.R
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun DetailScreen(
@@ -51,6 +53,8 @@ fun DetailScreen(
     val isFavorite by vm.selectedIsFavorite.collectAsState()
     val reviews by vm.selectedReviews.collectAsState()
     val p = product ?: return
+
+    val context = LocalContext.current
 
     var rating by remember { mutableIntStateOf(5) }
     var reviewText by remember { mutableStateOf("") }
@@ -96,6 +100,18 @@ fun DetailScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
                 GradeBadge(p.nutriscoreGrade)
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { IntentHelper.openInBrowser(context, p) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.open_in_browser)) }
+                OutlinedButton(
+                    onClick = { IntentHelper.shareByEmail(context, p) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(stringResource(R.string.share_by_email)) }
             }
         }
         if (!p.categories.isNullOrBlank()) {

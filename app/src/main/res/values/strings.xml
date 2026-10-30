@@ -28,4 +28,6 @@
     <string name="ingredients">Ingredients</string>
     <string name="categories">Categories</string>
     <string name="search">Search</string>
+    <string name="email_subject">Check out %1$s</string>
+    <string name="email_body">I found %1$s (%2$s) on Open Food Facts:\n%3$s</string>
 </resources>
