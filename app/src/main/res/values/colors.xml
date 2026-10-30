@@ -4,4 +4,5 @@
     <color name="savor_secondary">#FFB74D</color>
     <color name="savor_background">#FFF8F0</color>
     <color name="savor_text">#3E2723</color>
+    <color name="savor_card">#FFEBD6</color>
 </resources>
