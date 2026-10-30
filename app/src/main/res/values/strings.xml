@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Savor</string>
+    <string name="search_hint">Search foods (e.g. pizza, chocolate)</string>
+    <string name="favorites">Favorites</string>
+    <string name="explore">Explore</string>
+    <string name="add_review">Add review</string>
+    <string name="save_review">Save review</string>
+    <string name="your_review">Your review</string>
+    <string name="rating">Rating</string>
+    <string name="open_in_browser">View on Open Food Facts</string>
+    <string name="share_by_email">Share by email</string>
+    <string name="no_results">No results found</string>
+    <string name="error_network">Could not load data. Check your connection.</string>
+    <string name="no_app_found">No app found to handle this action</string>
 </resources>
