@@ -1,0 +1,26 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.kotlin/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Exclude selected UI files
+**/Components.kt
+**/DetailScreen.kt
+**/ExploreScreen.kt
+**/FavoritesScreen.kt
+**/HomeScreen.kt
+**/IntentHelper.kt
+**/SavorApp.kt
+**/SavorViewModel.kt

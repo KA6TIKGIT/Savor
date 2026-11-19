@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="popular_searches">
+        <item>Pizza</item>
+        <item>Chocolate</item>
+        <item>Cereal</item>
+        <item>Yogurt</item>
+        <item>Ice cream</item>
+        <item>Pasta</item>
+        <item>Biscuits</item>
+        <item>Orange juice</item>
+    </string-array>
+</resources>

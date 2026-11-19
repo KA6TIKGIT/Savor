@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="savor_primary">#E65100</color>
+    <color name="savor_secondary">#FFB74D</color>
+    <color name="savor_background">#FFF8F0</color>
+    <color name="savor_text">#3E2723</color>
+</resources>
